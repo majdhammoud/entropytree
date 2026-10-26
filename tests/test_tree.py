@@ -1,0 +1,70 @@
+import numpy as np
+import pandas as pd
+import pytest
+
+from entropytree import DecisionTree, entropy, information_gain
+
+PLAY = pd.DataFrame(
+    {
+        "outlook": ["sunny", "sunny", "overcast", "rain", "rain", "rain", "overcast",
+                    "sunny", "sunny", "rain", "sunny", "overcast", "overcast", "rain"],
+        "temp": [85, 80, 83, 70, 68, 65, 64, 72, 69, 75, 75, 72, 81, 71],
+        "windy": [False, True, False, False, False, True, True, False, False, False, True, True, False, True],
+        "play": ["no", "no", "yes", "yes", "yes", "no", "yes", "no", "yes", "yes", "yes", "yes", "yes", "no"],
+    }
+)
+
+
+def test_entropy_values():
+    assert entropy([0, 0, 1, 1]) == pytest.approx(1.0)
+    assert entropy([1, 1, 1]) == pytest.approx(0.0)
+    assert entropy(["a"] * 9 + ["b"] * 5) == pytest.approx(0.9402859586706309)
+
+
+def test_information_gain_perfect_split():
+    y = np.array([0, 0, 1, 1])
+    assert information_gain(y, [y[:2], y[2:]]) == pytest.approx(1.0)
+
+
+def test_root_split_is_outlook():
+    t = DecisionTree().fit(PLAY, "play")
+    assert t.root_.feature == "outlook"
+
+
+def test_fits_training_data_unlimited_depth():
+    assert DecisionTree().fit(PLAY, "play").score(PLAY) == 1.0
+
+
+def test_max_depth_limits_tree():
+    for d in (0, 1, 2):
+        t = DecisionTree(max_depth=d).fit(PLAY, "play")
+        assert t.depth() <= d
+    assert DecisionTree(max_depth=0).fit(PLAY, "play").n_leaves() == 1
+
+
+def test_min_samples_leaf():
+    t = DecisionTree(min_samples_leaf=5).fit(PLAY, "play")
+    def sizes(n):
+        return [sum(n.counts.values())] if n.is_leaf else [s for c in n.children.values() for s in sizes(c)]
+    assert min(sizes(t.root_)) >= 5
+
+
+def test_numeric_threshold_split():
+    df = pd.DataFrame({"x": [1, 2, 3, 10, 11, 12], "y": ["a", "a", "a", "b", "b", "b"]})
+    t = DecisionTree().fit(df, "y")
+    assert t.root_.threshold == pytest.approx(6.5)
+    assert list(t.predict(pd.DataFrame({"x": [0, 20]}))) == ["a", "b"]
+
+
+def test_unseen_category_and_display():
+    t = DecisionTree().fit(PLAY, "play")
+    out = t.predict(pd.DataFrame({"outlook": ["fog"], "temp": [70], "windy": [False]}))
+    assert out[0] in {"yes", "no"}
+    assert "outlook" in str(t)
+
+
+def test_errors():
+    with pytest.raises(KeyError):
+        DecisionTree().fit(PLAY, "nope")
+    with pytest.raises(RuntimeError):
+        DecisionTree().predict(PLAY)
