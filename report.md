@@ -1,7 +1,7 @@
 # Report: Decision Tree from Scratch
 
 **GitHub:** https://github.com/majdhammoud/entropytree
-**PyPI (bonus):** <ADD LINK AFTER UPLOAD, or "not deployed">
+**PyPI (bonus):** https://pypi.org/project/entropytree/0.1.0/ (`pip install entropytree`)
 
 ## Description
 I implemented a decision tree classifier from scratch (only `numpy`/`pandas`, no scikit-learn) in the package `entropytree`. It splits nodes by maximising **information gain** based on **Shannon entropy**, and it works on any (clean) pandas DataFrame.
