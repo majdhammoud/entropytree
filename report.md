@@ -1,6 +1,6 @@
 # Report: Decision Tree from Scratch
 
-**GitHub:** <ADD YOUR REPO LINK HERE>
+**GitHub:** https://github.com/majdhammoud/entropytree
 **PyPI (bonus):** <ADD LINK AFTER UPLOAD, or "not deployed">
 
 ## Description
